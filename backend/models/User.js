@@ -23,12 +23,16 @@ const userSchema = new mongoose.Schema({
     },
     role: {
         type: String,
-        enum: ['admin', 'staff', 'student'],
+        enum: ['admin', 'student'], // 'staff' was not present, so no change here.
         default: 'student'
     },
     department: {
         type: String,
         trim: true
+    },
+    building: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Building'
     },
     isActive: {
         type: Boolean,

@@ -1,18 +1,20 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Droplets, LayoutDashboard, Building2, Gauge, BarChart3, Bell, LogOut, User } from 'lucide-react';
-import { getUser, logout } from '../utils/auth';
+import { Droplets, LayoutDashboard, Building2, Gauge, BarChart3, Bell, LogOut, User, MessageSquare } from 'lucide-react';
+import { getCurrentUser, getActivePortal, logout, adminLogout } from '../utils/auth';
 
 const Navbar = () => {
     const location = useLocation();
-    const user = getUser();
+    const user = getCurrentUser();
+    const handleLogout = getActivePortal() === 'admin' ? adminLogout : logout;
 
     const navLinks = [
-        { path: '/', label: 'Dashboard', icon: LayoutDashboard },
+        { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
         { path: '/buildings', label: 'Buildings', icon: Building2 },
         { path: '/meters', label: 'Meters', icon: Gauge },
         { path: '/analytics', label: 'Analytics', icon: BarChart3 },
         { path: '/alerts', label: 'Alerts', icon: Bell },
+        { path: '/queries', label: 'Queries', icon: MessageSquare },
     ];
 
     return (
@@ -25,7 +27,7 @@ const Navbar = () => {
             <div className="container">
                 <div className="flex justify-between items-center" style={{ padding: 'var(--spacing-md) 0' }}>
                     {/* Logo */}
-                    <Link to="/" className="flex items-center gap-md" style={{ textDecoration: 'none' }}>
+                    <Link to="/dashboard" className="flex items-center gap-md" style={{ textDecoration: 'none' }}>
                         <div style={{
                             background: 'var(--gradient-primary)',
                             padding: 'var(--spacing-sm)',
@@ -113,7 +115,7 @@ const Navbar = () => {
                             </div>
                         </div>
                         <button
-                            onClick={logout}
+                            onClick={handleLogout}
                             className="btn btn-secondary btn-sm"
                             title="Logout"
                         >

@@ -1,29 +1,36 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { isAuthenticated } from './utils/auth';
+import { getCurrentToken } from './utils/auth';
 
 // Pages
-import Login from './pages/Login';
+import Landing from './pages/Landing';
+import UserLogin from './pages/UserLogin';
+import AdminLogin from './pages/AdminLogin';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import Buildings from './pages/Buildings';
 import Meters from './pages/Meters';
 import Analytics from './pages/Analytics';
 import Alerts from './pages/Alerts';
+import Queries from './pages/Queries';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
-    return isAuthenticated() ? children : <Navigate to="/login" />;
+    return !!getCurrentToken() ? children : <Navigate to="/" />;
 };
 
 function App() {
     return (
         <Router>
             <Routes>
-                <Route path="/login" element={<Login />} />
+                <Route path="/" element={
+                    !!getCurrentToken() ? <Navigate to="/dashboard" /> : <Landing />
+                } />
+                <Route path="/login" element={<UserLogin />} />
+                <Route path="/admin-portal" element={<AdminLogin />} />
                 <Route path="/register" element={<Register />} />
                 <Route
-                    path="/"
+                    path="/dashboard"
                     element={
                         <ProtectedRoute>
                             <Dashboard />
@@ -59,6 +66,14 @@ function App() {
                     element={
                         <ProtectedRoute>
                             <Alerts />
+                        </ProtectedRoute>
+                    }
+                />
+                <Route
+                    path="/queries"
+                    element={
+                        <ProtectedRoute>
+                            <Queries />
                         </ProtectedRoute>
                     }
                 />

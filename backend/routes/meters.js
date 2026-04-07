@@ -16,6 +16,14 @@ router.get('/', protect, async (req, res) => {
         if (status) filter.status = status;
         if (type) filter.type = type;
 
+        // Student data isolation
+        if (req.user.role === 'student') {
+            if (!req.user.building) {
+                return res.json({ success: true, count: 0, data: [] });
+            }
+            filter.building = req.user.building;
+        }
+
         const meters = await WaterMeter.find(filter)
             .populate('building', 'name code type')
             .sort({ meterId: 1 });

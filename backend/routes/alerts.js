@@ -16,6 +16,14 @@ router.get('/', protect, async (req, res) => {
         if (severity) filter.severity = severity;
         if (type) filter.type = type;
 
+        // Student data isolation
+        if (req.user.role === 'student') {
+            if (!req.user.building) {
+                return res.json({ success: true, count: 0, data: [] });
+            }
+            filter.building = req.user.building;
+        }
+
         const alerts = await Alert.find(filter)
             .populate('meter', 'meterId')
             .populate('building', 'name code')

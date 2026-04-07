@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { Droplets, Mail, Lock, User, Loader, ArrowRight } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Droplets, Mail, Lock, User, Loader, ShieldPlus, Building2 } from 'lucide-react';
 import api from '../utils/api';
-import { setToken, setUser } from '../utils/auth';
+import { setToken, setUser, setActivePortal } from '../utils/auth';
 
 const Register = () => {
     const navigate = useNavigate();
@@ -10,10 +10,27 @@ const Register = () => {
         name: '',
         email: '',
         password: '',
-        confirmPassword: ''
+        confirmPassword: '',
+        role: 'student',
+        building: ''
     });
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const [buildings, setBuildings] = useState([]);
+
+    useEffect(() => {
+        setActivePortal('student');
+        const fetchBuildings = async () => {
+            try {
+                // Fetch all buildings for students to select from
+                const response = await api.get('/buildings/list');
+                setBuildings(response.data.data || []);
+            } catch (err) {
+                console.error('Error fetching buildings:', err);
+            }
+        };
+        fetchBuildings();
+    }, []);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -30,16 +47,19 @@ const Register = () => {
             const response = await api.post('/auth/register', {
                 name: formData.name,
                 email: formData.email,
-                password: formData.password
+                password: formData.password,
+                role: formData.role,
+                building: formData.building || undefined // Only send if selected
             });
 
             if (response.data.success) {
                 setToken(response.data.token);
                 setUser(response.data.user);
-                navigate('/');
+                setActivePortal('student');
+                navigate('/dashboard');
             }
         } catch (err) {
-            setError(err.response?.data?.message || 'Registration failed. Please try again.');
+            setError(err.response?.data?.message || 'Registration failed. Internal server error.');
         } finally {
             setLoading(false);
         }
@@ -51,118 +71,158 @@ const Register = () => {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            background: 'var(--gradient-overlay), var(--color-bg-dark)',
-            padding: 'var(--spacing-lg)'
+            background: 'var(--color-bg-dark)',
+            padding: 'var(--spacing-lg)',
+            position: 'relative'
         }}>
-            <div className="glass-card" style={{ maxWidth: '450px', width: '100%' }}>
-                {/* Logo */}
+            {/* Clean Background Glow */}
+            <div style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                background: 'radial-gradient(circle at center, rgba(14, 116, 209, 0.05) 0%, transparent 70%)',
+                zIndex: 0
+            }} />
+
+            <div className="glass-card animate-fadeIn" style={{
+                maxWidth: '400px',
+                width: '100%',
+                position: 'relative',
+                zIndex: 1,
+                padding: 'var(--spacing-2xl)',
+                border: '1px solid rgba(255, 255, 255, 0.05)'
+            }}>
                 <div className="flex flex-col items-center" style={{ marginBottom: 'var(--spacing-xl)' }}>
                     <div style={{
                         background: 'var(--gradient-primary)',
-                        padding: 'var(--spacing-lg)',
-                        borderRadius: 'var(--radius-xl)',
+                        padding: 'var(--spacing-md)',
+                        borderRadius: 'var(--radius-lg)',
                         marginBottom: 'var(--spacing-md)',
                         boxShadow: 'var(--shadow-glow)'
                     }}>
-                        <Droplets size={48} color="white" />
+                        <ShieldPlus size={32} color="white" />
                     </div>
-                    <h1 style={{ fontSize: 'var(--font-size-3xl)', fontWeight: 700, margin: 0 }}>
-                        <span style={{
-                            background: 'var(--gradient-primary)',
-                            WebkitBackgroundClip: 'text',
-                            WebkitTextFillColor: 'transparent',
-                            backgroundClip: 'text'
-                        }}>
-                            AquaTrack
-                        </span>
+                    <h1 style={{ fontSize: 'var(--font-size-2xl)', fontWeight: 700, margin: 0 }}>
+                        Create Account
                     </h1>
-                    <p className="text-secondary" style={{ margin: 0, fontSize: 'var(--font-size-sm)' }}>
-                        Create your account
+                    <p className="text-muted" style={{ margin: 'var(--spacing-xs) 0 0 0', fontSize: 'var(--font-size-xs)' }}>
+                        Institutional Water Management System
                     </p>
                 </div>
 
-                {/* Error Message */}
                 {error && (
                     <div style={{
                         padding: 'var(--spacing-md)',
-                        background: 'rgba(239, 68, 68, 0.1)',
-                        border: '1px solid rgba(239, 68, 68, 0.3)',
+                        background: 'rgba(239, 68, 68, 0.05)',
+                        border: '1px solid rgba(239, 68, 68, 0.2)',
                         borderRadius: 'var(--radius-md)',
                         color: 'var(--color-danger)',
                         marginBottom: 'var(--spacing-lg)',
-                        fontSize: 'var(--font-size-sm)'
+                        fontSize: 'var(--font-size-xs)',
+                        textAlign: 'center'
                     }}>
                         {error}
                     </div>
                 )}
 
-                {/* Register Form */}
                 <form onSubmit={handleSubmit}>
                     <div className="form-group">
-                        <label className="form-label" htmlFor="name">
-                            <User size={14} style={{ display: 'inline', marginRight: '4px' }} />
-                            Full Name
-                        </label>
-                        <input
-                            id="name"
-                            type="text"
-                            className="form-input"
-                            placeholder="John Doe"
-                            value={formData.name}
-                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                            required
-                            autoFocus
-                        />
+                        <label className="form-label">Full Name</label>
+                        <div style={{ position: 'relative' }}>
+                            <User size={16} style={{
+                                position: 'absolute',
+                                left: '12px',
+                                top: '50%',
+                                transform: 'translateY(-50%)',
+                                color: 'var(--color-text-muted)'
+                            }} />
+                            <input
+                                type="text"
+                                className="form-input"
+                                placeholder="Your full name"
+                                style={{ paddingLeft: '40px' }}
+                                value={formData.name}
+                                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                required
+                                autoFocus
+                            />
+                        </div>
                     </div>
 
                     <div className="form-group">
-                        <label className="form-label" htmlFor="email">
-                            <Mail size={14} style={{ display: 'inline', marginRight: '4px' }} />
-                            Email Address
-                        </label>
-                        <input
-                            id="email"
-                            type="email"
-                            className="form-input"
-                            placeholder="your.email@campus.edu"
-                            value={formData.email}
-                            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                            required
-                        />
+                        <label className="form-label">Email</label>
+                        <div style={{ position: 'relative' }}>
+                            <Mail size={16} style={{
+                                position: 'absolute',
+                                left: '12px',
+                                top: '50%',
+                                transform: 'translateY(-50%)',
+                                color: 'var(--color-text-muted)'
+                            }} />
+                            <input
+                                type="email"
+                                className="form-input"
+                                placeholder="name@email.com"
+                                style={{ paddingLeft: '40px' }}
+                                value={formData.email}
+                                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                required
+                            />
+                        </div>
                     </div>
 
-                    <div className="form-group">
-                        <label className="form-label" htmlFor="password">
-                            <Lock size={14} style={{ display: 'inline', marginRight: '4px' }} />
-                            Password
-                        </label>
-                        <input
-                            id="password"
-                            type="password"
-                            className="form-input"
-                            placeholder="••••••••"
-                            value={formData.password}
-                            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                            required
-                            minLength={6}
-                        />
+                    <div className="form-group" style={{ marginTop: 'var(--spacing-md)' }}>
+                        <label className="form-label">Hostel/Building</label>
+                        <div style={{ position: 'relative' }}>
+                            <Building2 size={16} style={{
+                                position: 'absolute',
+                                left: '12px',
+                                top: '50%',
+                                transform: 'translateY(-50%)',
+                                color: 'var(--color-text-muted)'
+                            }} />
+                            <select
+                                className="form-input"
+                                style={{ paddingLeft: '40px', appearance: 'none' }}
+                                value={formData.building}
+                                onChange={(e) => setFormData({ ...formData, building: e.target.value })}
+                                required
+                            >
+                                <option value="" disabled>Select your hostel</option>
+                                {buildings.map(b => (
+                                    <option key={b._id} value={b._id}>{b.name} ({b.code})</option>
+                                ))}
+                            </select>
+                        </div>
                     </div>
 
-                    <div className="form-group">
-                        <label className="form-label" htmlFor="confirmPassword">
-                            <Lock size={14} style={{ display: 'inline', marginRight: '4px' }} />
-                            Confirm Password
-                        </label>
-                        <input
-                            id="confirmPassword"
-                            type="password"
-                            className="form-input"
-                            placeholder="••••••••"
-                            value={formData.confirmPassword}
-                            onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                            required
-                            minLength={6}
-                        />
+                    <div className="grid grid-cols-2" style={{ gap: 'var(--spacing-md)', marginTop: 'var(--spacing-md)' }}>
+                        <div className="form-group">
+                            <label className="form-label">Password</label>
+                            <input
+                                type="password"
+                                className="form-input"
+                                placeholder="••••••••"
+                                value={formData.password}
+                                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                                required
+                                minLength={6}
+                            />
+                        </div>
+                        <div className="form-group">
+                            <label className="form-label">Confirm</label>
+                            <input
+                                type="password"
+                                className="form-input"
+                                placeholder="••••••••"
+                                value={formData.confirmPassword}
+                                onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                                required
+                                minLength={6}
+                            />
+                        </div>
                     </div>
 
                     <button
@@ -171,24 +231,17 @@ const Register = () => {
                         style={{ width: '100%', marginTop: 'var(--spacing-md)' }}
                         disabled={loading}
                     >
-                        {loading ? (
-                            <>
-                                <Loader className="animate-pulse" size={20} />
-                                Creating Account...
-                            </>
-                        ) : (
-                            'Sign Up'
-                        )}
+                        {loading ? <Loader className="animate-pulse" size={20} /> : 'Register Account'}
                     </button>
                 </form>
 
-                <div style={{ marginTop: 'var(--spacing-lg)', textAlign: 'center' }}>
-                    <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)' }}>
-                        Already have an account?{' '}
-                        <Link to="/login" style={{ color: 'var(--color-primary-light)', fontWeight: 500, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                            Sign In <ArrowRight size={14} />
-                        </Link>
-                    </p>
+                <div style={{
+                    marginTop: 'var(--spacing-xl)',
+                    textAlign: 'center',
+                    color: 'var(--color-text-muted)',
+                    fontSize: 'var(--font-size-xs)'
+                }}>
+                    Access requests are logged and monitored.
                 </div>
             </div>
         </div>

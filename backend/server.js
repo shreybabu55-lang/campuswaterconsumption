@@ -12,6 +12,7 @@ const buildingRoutes = require('./routes/buildings');
 const meterRoutes = require('./routes/meters');
 const readingRoutes = require('./routes/readings');
 const alertRoutes = require('./routes/alerts');
+const queryRoutes = require('./routes/queries');
 
 const app = express();
 
@@ -31,6 +32,7 @@ app.use('/api/buildings', buildingRoutes);
 app.use('/api/meters', meterRoutes);
 app.use('/api/readings', readingRoutes);
 app.use('/api/alerts', alertRoutes);
+app.use('/api/queries', queryRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

@@ -12,7 +12,12 @@ const api = axios.create({
 // Request interceptor to add auth token
 api.interceptors.request.use(
     (config) => {
-        const token = localStorage.getItem('token');
+        // Use the token for the currently active portal in THIS tab
+        const activePortal = sessionStorage.getItem('active_portal') || 'student';
+        const token = activePortal === 'admin' 
+            ? localStorage.getItem('admin_token') 
+            : localStorage.getItem('student_token');
+            
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
@@ -28,9 +33,16 @@ api.interceptors.response.use(
     (response) => response,
     (error) => {
         if (error.response?.status === 401) {
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
-            window.location.href = '/login';
+            const activePortal = sessionStorage.getItem('active_portal') || 'student';
+            if (activePortal === 'admin') {
+                localStorage.removeItem('admin_token');
+                localStorage.removeItem('admin_user');
+                window.location.href = '/admin-portal';
+            } else {
+                localStorage.removeItem('student_token');
+                localStorage.removeItem('student_user');
+                window.location.href = '/login';
+            }
         }
         return Promise.reject(error);
     }

@@ -47,7 +47,7 @@ npm run dev
 
 Open http://localhost:5173 in your browser and login with:
 
-- **Admin**: admin@campus.edu / password123
+- **Admin Portal (http://localhost:5173/admin-portal)**: admin@bitsathy.ac.in / admin123
 - **Staff**: staff@campus.edu / password123
 - **Student**: student@campus.edu / password123
 

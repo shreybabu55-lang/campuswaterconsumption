@@ -11,22 +11,16 @@ const Building = require('./models/Building');
 const WaterMeter = require('./models/WaterMeter');
 const WaterReading = require('./models/WaterReading');
 const Alert = require('./models/Alert');
+const Query = require('./models/Query');
 
 // Sample data
 const users = [
     {
         name: 'Admin User',
-        email: 'admin@campus.edu',
-        password: 'password123',
+        email: 'admin@bitsathy.ac.in',
+        password: 'admin123',
         role: 'admin',
         department: 'Administration'
-    },
-    {
-        name: 'Staff Member',
-        email: 'staff@campus.edu',
-        password: 'password123',
-        role: 'staff',
-        department: 'Facilities'
     },
     {
         name: 'Student User',
@@ -39,8 +33,8 @@ const users = [
 
 const buildings = [
     {
-        name: 'Engineering Block',
-        code: 'ENG',
+        name: 'Ganga',
+        code: 'GAN',
         type: 'academic',
         floors: 4,
         capacity: 500,
@@ -52,8 +46,8 @@ const buildings = [
         description: 'Main engineering building with laboratories'
     },
     {
-        name: 'Science Complex',
-        code: 'SCI',
+        name: 'Yamuna',
+        code: 'YAM',
         type: 'academic',
         floors: 3,
         capacity: 400,
@@ -63,8 +57,8 @@ const buildings = [
         description: 'Science departments and research labs'
     },
     {
-        name: 'Boys Hostel A',
-        code: 'BHA',
+        name: 'Ruby',
+        code: 'RUB',
         type: 'residential',
         floors: 5,
         capacity: 300,
@@ -74,8 +68,8 @@ const buildings = [
         description: 'Residential facility for male students'
     },
     {
-        name: 'Girls Hostel A',
-        code: 'GHA',
+        name: 'Emerald',
+        code: 'EME',
         type: 'residential',
         floors: 5,
         capacity: 300,
@@ -85,8 +79,8 @@ const buildings = [
         description: 'Residential facility for female students'
     },
     {
-        name: 'Administrative Building',
-        code: 'ADM',
+        name: 'AS Block',
+        code: 'ASB',
         type: 'administrative',
         floors: 2,
         capacity: 100,
@@ -96,8 +90,8 @@ const buildings = [
         description: 'Main administrative offices'
     },
     {
-        name: 'Sports Complex',
-        code: 'SPT',
+        name: 'Kaveri',
+        code: 'KAV',
         type: 'recreational',
         floors: 2,
         capacity: 200,
@@ -124,17 +118,23 @@ const seedDatabase = async () => {
         await WaterMeter.deleteMany({});
         await WaterReading.deleteMany({});
         await Alert.deleteMany({});
+        await Query.deleteMany({});
         console.log('✓ Cleared existing data');
 
         // Create users
+        console.log('Creating buildings first to assign users...');
+        const createdBuildings = await Building.create(buildings);
+        console.log(`✓ Created ${createdBuildings.length} buildings`);
+
         console.log('Creating users...');
+        // Assign the student to a residential building
+        const studentBuilding = createdBuildings.find(b => b.type === 'residential');
+        users[1].building = studentBuilding._id;
+
         const createdUsers = await User.create(users);
         console.log(`✓ Created ${createdUsers.length} users`);
 
-        // Create buildings
-        console.log('Creating buildings...');
-        const createdBuildings = await Building.create(buildings);
-        console.log(`✓ Created ${createdBuildings.length} buildings`);
+        // Buildings were created earlier
 
         // Create meters for each building
         console.log('Creating water meters...');
@@ -160,7 +160,7 @@ const seedDatabase = async () => {
         const createdMeters = await WaterMeter.create(meters);
         console.log(`✓ Created ${createdMeters.length} water meters`);
 
-        // Create readings for the past 30 days
+        // Create readings for the past 90 days
         console.log('Creating water readings...');
         const readings = [];
         const now = new Date();
@@ -168,7 +168,7 @@ const seedDatabase = async () => {
         for (const meter of createdMeters) {
             let cumulativeReading = Math.floor(Math.random() * 50000) + 10000;
 
-            for (let day = 30; day >= 0; day--) {
+            for (let day = 90; day >= 0; day--) {
                 const timestamp = new Date(now);
                 timestamp.setDate(timestamp.getDate() - day);
                 timestamp.setHours(Math.floor(Math.random() * 24));
@@ -181,7 +181,7 @@ const seedDatabase = async () => {
                     reading: cumulativeReading,
                     consumption: consumption,
                     timestamp: timestamp,
-                    recordedBy: createdUsers[1]._id, // Staff member
+                    recordedBy: createdUsers[0]._id, // Admin user
                     isAnomaly: consumption > 2000
                 });
             }
@@ -204,7 +204,7 @@ const seedDatabase = async () => {
                 type: 'high_consumption',
                 severity: 'high',
                 title: 'High water consumption detected',
-                description: 'Engineering Block showing unusually high consumption',
+                description: 'Ganga showing unusually high consumption',
                 meter: createdMeters[0]._id,
                 building: createdBuildings[0]._id,
                 status: 'active',
@@ -214,18 +214,18 @@ const seedDatabase = async () => {
                 type: 'leak_detected',
                 severity: 'critical',
                 title: 'Possible leak detected',
-                description: 'Continuous flow detected in Boys Hostel A',
+                description: 'Continuous flow detected in Ruby',
                 meter: createdMeters[4]._id,
                 building: createdBuildings[2]._id,
                 status: 'acknowledged',
-                acknowledgedBy: createdUsers[1]._id,
+                acknowledgedBy: createdUsers[0]._id,
                 acknowledgedAt: new Date()
             },
             {
                 type: 'maintenance',
                 severity: 'medium',
                 title: 'Scheduled maintenance due',
-                description: 'Sports Complex meter needs calibration',
+                description: 'Kaveri meter needs calibration',
                 meter: createdMeters[createdMeters.length - 1]._id,
                 building: createdBuildings[5]._id,
                 status: 'active'
@@ -242,8 +242,7 @@ const seedDatabase = async () => {
         console.log(`   Readings: ${createdReadings.length}`);
         console.log(`   Alerts: ${createdAlerts.length}`);
         console.log('\n👤 Login Credentials:');
-        console.log('   Admin:   admin@campus.edu / password123');
-        console.log('   Staff:   staff@campus.edu / password123');
+        console.log('   Admin:   admin@bitsathy.ac.in / admin123');
         console.log('   Student: student@campus.edu / password123');
 
         process.exit(0);

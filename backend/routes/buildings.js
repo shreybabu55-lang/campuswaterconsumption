@@ -15,6 +15,14 @@ router.get('/', protect, async (req, res) => {
         if (type) filter.type = type;
         if (isActive !== undefined) filter.isActive = isActive === 'true';
 
+        // Student data isolation
+        if (req.user.role === 'student') {
+            if (!req.user.building) {
+                return res.json({ success: true, count: 0, data: [] }); // If student has no hostel, they see nothing
+            }
+            filter._id = req.user.building;
+        }
+
         const buildings = await Building.find(filter)
             .populate('meterCount')
             .sort({ name: 1 });
@@ -26,6 +34,33 @@ router.get('/', protect, async (req, res) => {
         });
     } catch (error) {
         console.error('Get buildings error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error'
+        });
+    }
+});
+
+// @route   GET /api/buildings/list
+// @desc    Get buildings list for registration/selection
+// @access  Public
+router.get('/list', async (req, res) => {
+    try {
+        const type = req.query.type;
+        const filter = { isActive: true };
+        if (type) filter.type = type;
+        
+        const buildings = await Building.find(filter)
+            .select('name code type')
+            .sort({ name: 1 });
+
+        res.json({
+            success: true,
+            count: buildings.length,
+            data: buildings
+        });
+    } catch (error) {
+        console.error('Get buildings list error:', error);
         res.status(500).json({
             success: false,
             message: 'Server error'
