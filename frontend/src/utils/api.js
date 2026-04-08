@@ -35,13 +35,15 @@ api.interceptors.response.use(
         if (error.response?.status === 401) {
             const activePortal = sessionStorage.getItem('active_portal') || 'student';
             if (activePortal === 'admin') {
+                const hadToken = !!localStorage.getItem('admin_token');
                 localStorage.removeItem('admin_token');
                 localStorage.removeItem('admin_user');
-                window.location.href = '/admin-portal';
+                if (hadToken) window.location.href = '/admin-portal';
             } else {
+                const hadToken = !!localStorage.getItem('student_token');
                 localStorage.removeItem('student_token');
                 localStorage.removeItem('student_user');
-                window.location.href = '/login';
+                if (hadToken) window.location.href = '/login';
             }
         }
         return Promise.reject(error);
