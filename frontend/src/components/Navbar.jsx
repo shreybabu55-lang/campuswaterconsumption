@@ -1,13 +1,19 @@
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Droplets, LayoutDashboard, Building2, Gauge, BarChart3, Bell, LogOut, User, MessageSquare } from 'lucide-react';
 import { getCurrentUser, getActivePortal, logout, adminLogout } from '../utils/auth';
 
 const Navbar = () => {
     const location = useLocation();
     const user = getCurrentUser();
-    const handleLogout = getActivePortal() === 'admin' ? adminLogout : logout;
-
+    const navigate = useNavigate();
+    const handleLogout = () => {
+        if (getActivePortal() === 'admin') {
+            adminLogout(navigate);
+        } else {
+            logout(navigate);
+        }
+    };
     const navLinks = [
         { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
         { path: '/buildings', label: 'Buildings', icon: Building2 },

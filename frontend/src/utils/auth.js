@@ -50,14 +50,22 @@ export const hasRole = (role) => {
 export const isAdmin = () => hasRole('admin');
 export const isStaff = () => hasRole('staff');
 
-export const logout = () => {
+export const logout = (navigate) => {
     removeToken();
     removeUser();
-    window.location.href = '/login';
+    if (navigate) {
+        navigate('/login');
+    } else {
+        window.location.href = '/login';
+    }
 };
 
-export const adminLogout = () => {
+export const adminLogout = (navigate) => {
     removeAdminToken();
     removeAdminUser();
-    window.location.href = '/admin-portal';
+    if (navigate) {
+        navigate('/admin-portal');
+    } else {
+        window.location.href = '/admin-portal';
+    }
 };
